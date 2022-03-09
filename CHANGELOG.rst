@@ -4,6 +4,13 @@
  Change history
 ================
 
+.. _version-1.2:
+
+:release-date: 2022-03-09 17:00 UTC+2
+:release-by: Calin Salagean
+
+Drop Django 1 model.QuerySet backport. Add Django 2 support
+
 .. _version-1.1.2:
 
 :release-date: 2017-05-18 11:30 a.m. UTC+2
