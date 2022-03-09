@@ -9,7 +9,7 @@ from django.contrib.admin.views import main as main_views
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.encoding import force_text
-from django.utils.html import escape
+from django.utils.html import escape, format_html, strip_tags
 from django.utils.translation import ugettext_lazy as _
 
 from celery import current_app
@@ -19,7 +19,7 @@ from celery.utils.text import abbrtask
 
 from .models import TaskState, WorkerState
 from .humanize import naturaldate
-from .utils import action, display_field, fixedwidth, make_aware
+from .utils import action, display_field, make_aware
 
 
 TASK_STATE_COLORS = {states.SUCCESS: 'green',
@@ -48,7 +48,7 @@ def colored_state(task):
     """
     state = escape(task.state)
     color = TASK_STATE_COLORS.get(task.state, 'black')
-    return '<b><span style="color: {0};">{1}</span></b>'.format(color, state)
+    return format_html(u'<b><span style="color: {0};">{1}</span></b>', color, state)
 
 
 @display_field(_('state'), 'last_heartbeat')
@@ -59,15 +59,15 @@ def node_state(node):
     """
     state = node.is_alive() and 'ONLINE' or 'OFFLINE'
     color = NODE_STATE_COLORS[state]
-    return '<b><span style="color: {0};">{1}</span></b>'.format(color, state)
+    return format_html(u'<b><span style="color: {0};">{1}</span></b>', color, state)
 
 
 @display_field(_('ETA'), 'eta')
 def eta(task):
     """Return the task ETA as a grey "none" if none is provided."""
     if not task.eta:
-        return '<span style="color: gray;">none</span>'
-    return escape(make_aware(task.eta))
+        return 'none'
+    return strip_tags(make_aware(task.eta))
 
 
 @display_field(_('when'), 'tstamp')
@@ -78,7 +78,7 @@ def tstamp(task):
     it as a "natural date" -- a human readable version.
     """
     value = make_aware(task.tstamp)
-    return '<div title="{0}">{1}</div>'.format(
+    return format_html('<div title="{0}">{1}</div>',
         escape(str(value)), escape(naturaldate(value)),
     )
 
@@ -87,7 +87,7 @@ def tstamp(task):
 def name(task):
     """Return the task name and abbreviates it to maximum of 16 characters."""
     short_name = abbrtask(task.name, 16)
-    return '<div title="{0}"><b>{1}</b></div>'.format(
+    return format_html('<div title="{0}"><b>{1}</b></div>',
         escape(task.name), escape(short_name),
     )
 
@@ -145,11 +145,11 @@ class TaskMonitor(ModelMonitor):
         }),
     )
     list_display = (
-        fixedwidth('task_id', name=_('UUID'), pt=8),
+        'task_id',
         colored_state,
         name,
-        fixedwidth('args', pretty=True),
-        fixedwidth('kwargs', pretty=True),
+        'args',
+        'kwargs',
         eta,
         tstamp,
         'worker',
